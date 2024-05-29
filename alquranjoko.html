@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Quran</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+      crossorigin="anonymous"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+      crossorigin="anonymous"
+    />
+    <style>
+        @import url(https://fonts.googleapis.com/earlyaccess/amiri.css);
+        .amiri {
+          font-family: 'Amiri', serif;
+        }
+        body {
+          background-color: #0d6efd; /* Blue background */
+          color: black; /* Black text color */
+        }
+        .content {
+          background: rgba(0, 0, 139, 0.8); /* Dark blue background with some transparency */
+          border-radius: 10px;
+          padding: 20px;
+        }
+        .list-group-item {
+          background-color: rgba(255, 255, 255, 0.2); /* Light transparent background for list items */
+          color: black;
+        }
+        .list-group-item:hover {
+          background-color: rgba(255, 255, 255, 0.4); /* Slightly less transparent on hover */
+          color: black;
+        }
+        #text-arabic {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: black;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .list-group-item-action:focus, .list-group-item-action:hover {
+          background-color: rgba(255, 255, 255, 0.3);
+          color: black;
+        }
+        .fs-3 {
+          color: black;
+        }
+        footer {
+          background-color: #343a40;
+          color: white;
+          padding: 10px;
+        }
+        .ayah {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: black;
+          border-radius: 10px;
+          padding: 15px;
+          margin-bottom: 10px;
+          position: relative;
+        }
+        .ayah:hover {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+        .ayah-number {
+          background-color: #ffffff;
+          color: #0d6efd;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: absolute;
+          top: -20px;
+          left: -20px;
+          font-size: 1.2rem;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .translation {
+          color: black;
+          font-size: 1rem;
+          margin-top: 10px;
+        }
+        .search-bar {
+          margin-bottom: 20px;
+          background-color: rgba(255, 255, 255, 0.2);
+          color: black;
+        }
+        .search-bar::placeholder {
+          color: rgba(0, 0, 0, 0.5);
+        }
+        .audio-control {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 10px;
+        }
+    </style>
+  </head>
+  <body>
+    <main id="maincontent" class="content">
+      <div class="container-fluid p-2">
+        <div class="row">
+          <div class="col-4">
+            <input type="text" id="search-bar" class="form-control search-bar" placeholder="Search Surah...">
+            <div
+              class="list-group shadow p-3 mb-5 bg-body-tertiary rounded"
+              id="daftar-surah"
+            ></div>
+          </div>
+          <div class="col-8">
+            <div
+              class="shadow p-3 mb-5 bg-body-tertiary rounded"
+              id="text-arabic"
+            >
+              Silakan klik daftar surah
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer class="text-center">Copyright &copy; 2023</footer>
+  </body>
+  <script>
+    const BASE_URL = "https://equran.id/api/v2";
+    const quranSurah = async () => {
+      const endpoint = `${BASE_URL}/surat`;
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      return data.data;
+    };
+    const quranDetail = async (nomor) => {
+      const endpoint = `${BASE_URL}/surat/${nomor}`;
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      console.log(data.data);
+      return data.data;
+    };
+
+    const renderSurahList = (surahList) => {
+      const daftarSurah = document.querySelector("#daftar-surah");
+      daftarSurah.innerHTML = '';
+      surahList.forEach((surah) => {
+        const list = `<a href="#" class="list-group-item
+                        list-group-item-action" id="surah-${surah.nomor}">
+                        ${surah.nomor} - ${surah.namaLatin} (${surah.nama})
+                      </a>`;
+        daftarSurah.insertAdjacentHTML("beforeend", list);
+
+        document.querySelector(`#surah-${surah.nomor}`)
+          .addEventListener("click", function (event) {
+            event.preventDefault();
+            document.querySelector(`#text-arabic`).innerHTML = "";
+            quranDetail(surah.nomor).then((ayat) => {
+              ayat.ayat.forEach((ayah) => {
+                const ayatHTML = `<div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="list-group shadow-sm fs-3 text-end amiri ayah" title="${ayah.teksIndonesia}">
+                                            <div class="ayah-number">${ayah.nomorAyat}</div>
+                                            ${ayah.teksArab}
+                                            <div class="translation">${ayah.teksIndonesia}</div>
+                                            <div class="audio-control">
+                                                <audio controls>
+                                                  <source src="${ayah.audio['04']}" type="audio/mpeg">
+                                                  Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
+                                        </div>
+                                    </div>
+                                  </div>`;
+                document.querySelector(`#text-arabic`).insertAdjacentHTML("beforeend", ayatHTML);
+              });
+            });
+          });
+      });
+    };
+
+    quranSurah().then((surat) => {
+      renderSurahList(surat);
+
+      document.querySelector('#search-bar').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const filteredSurah = surat.filter(surah => surah.namaLatin.toLowerCase().includes(query) || surah.nama.toLowerCase().includes(query));
+        renderSurahList(filteredSurah);
+      });
+    });
+  </script>
+</html>
